@@ -1,11 +1,9 @@
 package ru.leosam.game;
 
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
 import java.util.Random;
 
 public class AppTest {
@@ -36,20 +34,19 @@ public class AppTest {
     @DisplayName("Изменение ресурсов")
     void resourceTest() {
         Unit unit = new Unit("Hobbit");
-        final Resource[] RESOURCES = Resource.values();
-        final int RESOURCES_COUNT = RESOURCES.length;
         Random random = new Random();
         for (int k = 0; k < 10; k++) {
-            Resource resource = RESOURCES[random.nextInt(RESOURCES_COUNT)];
+            Resource resource = Resource.RESOURCES[random.nextInt(Resource.RESOURCES_COUNT)];
             int value = random.nextInt(Integer.MAX_VALUE);
             unit.setResource(resource, value);
             Assertions.assertEquals(unit.getResource(resource), value);
             if (value != 0)
                 Assertions.assertThrows(IllegalArgumentException.class, () -> unit.setResource(resource, -value));
         }
-        for (Resource resource : RESOURCES) {
+        for (Resource resource : Resource.RESOURCES) {
             System.out.println(resource + ": " + unit.getResource(resource));
         }
+        unit.printResources();
     }
 
     @Test
@@ -57,5 +54,28 @@ public class AppTest {
     void hailTest() {
         Unit unit = new Unit("Sorceress");
         Assertions.assertTrue(unit.hail().contains(unit.getName()));
+    }
+
+    @Test
+    @DisplayName("Undo test")
+    void undoTest() {
+        Unit unit = new Unit("Engineer");
+        Assertions.assertThrows(NothingToUndo.class, unit::undo);
+        String initialState = String.valueOf(unit);
+        unit.setName("Engineer 2");
+        unit.setHealth(50);
+        unit.setResource(Resource.GOLD, 10);
+        unit.setResource(Resource.FOOD, 20);
+        unit.setResource(Resource.WATER, 30);
+        unit.setResource(Resource.ENERGY, 40);
+        for(;;) {
+            try {
+                unit.undo();
+                System.out.println(unit);
+            } catch (NothingToUndo e) {
+                break;
+            }
+        }
+        Assertions.assertEquals(String.valueOf(unit), initialState);
     }
 }
